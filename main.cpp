@@ -33,8 +33,17 @@ int main(int argc, char** argv) {
     printf("Keys: \n");
     crypt->genKey();
 
-    char cryptText[1024], encText[1024];
+   // printf("generating prime:\n %s",crypt->generatePrime(1024));
+
+    
+    char cryptText[1024]; char encText[1024];
+
     crypt->encrypt("ITS ALL GREEK TO ME",cryptText);
+    printf("encrypted Text: \n %s", cryptText);
+    
+    //crypt->decrypt(cryptText,encText);
+
+    /*
     crypt->decrypt(cryptText,encText);
 
     pthread_t th_pool[_THREADCOUNT];
@@ -44,6 +53,7 @@ int main(int argc, char** argv) {
     pthread_create(&th_pool[0],NULL, changeMode, (void *) m);
 
     pthread_exit(NULL);
+     */
     return (EXIT_SUCCESS);
     
 }

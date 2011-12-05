@@ -33,7 +33,7 @@ Crypt::~Crypt()
 
 int Crypt::decrypt(char* _c, char * _m)
 {
-
+/*
      std::string c(_c);
     int priv_key[3];
 
@@ -41,35 +41,63 @@ int Crypt::decrypt(char* _c, char * _m)
     priv_key[_KEY_D] = key[_KEY_D];
     priv_key[_KEY_N] = key[_KEY_N];
 
-    const int digits = ((int)log10(key[_KEY_N]))+1;
-    const int blocks = ceil(sizeof(c)/digits);
+    const int digits = (((int)log10(priv_key[_KEY_N])+1)/2);
+    int size_m = strlen(_c);
+    double b = (double)strlen(_c)/(double)digits;
+    const int blocks = ceil(b);
+ * */
 
-    //int c[blocks];
+    std::string c(_c);
+    std::string retval;
+
+    const int digits = (((int)log10(atoi(key[_KEY_N]))+1));
+    int size_m = strlen(_c);
+    double b = (double)strlen(_c)/(double)digits;
+    const int blocks = ceil(b);
 
     char c_tmp[digits];
     int c_tmp_i = 0;
+    std::string s;
 
     for(int i=0; i < blocks; i++){
 
-        c.copy(c_tmp,digits,(i*blocks));
-        sscanf(c_tmp, "%d" , &c_tmp_i);
-        _m[i] = (int)pow(c_tmp_i,priv_key[_KEY_D]) % priv_key[_KEY_N];
+        c.copy(c_tmp,digits,(i*digits));
+        c_tmp_i = atoi(c_tmp);
+
+        BIGNUM *bn_c = BN_new();
+        BIGNUM *bn_n = BN_new();
+        BIGNUM *bn_d = BN_new();
+        BIGNUM *num_tmp = BN_new();
+
+        BN_CTX *ctx = BN_CTX_new();
+
+        BN_dec2bn(&bn_c,s.c_str());
+        BN_dec2bn(&bn_d,key[_KEY_D]);
+        BN_dec2bn(&bn_n,key[_KEY_N]);
+
+        BN_mod_exp(num_tmp,bn_c,bn_d,bn_n,ctx);
+
+        retval.append(BN_bn2dec(num_tmp));
+
+        //TODO: use BIGNUM, int is to small
+       // int num_tmp = (int)pow(c_tmp_i,priv_key[_KEY_D]);
+        //_m[i] = num_tmp % priv_key[_KEY_N];
 
     }
+     retval.copy(_m,retval.length(),0);
 
     return 1;
 
 }
-int Crypt::encrypt(char* _m ,char * _c)
+int Crypt::encrypt(char* _m ,char* _c)
 {
     std::string m(_m);
-    int pub_key[3];
-
+    std::string retval;
     // get key from database
-    pub_key[_KEY_E] = key[_KEY_E];
-    pub_key[_KEY_N] = key[_KEY_N];
+    //pub_key[_KEY_E] = key[_KEY_E];
+    //pub_key[_KEY_N] = key[_KEY_N];
 
-    const int digits = (((int)log10(key[_KEY_N]))+1)/2;
+    const int digits = (((int)log10(atoi(key[_KEY_N]))+1))/2;
     int size_m = strlen(_m);
     double b = (double)strlen(_m)/(double)digits;
     const int blocks = ceil(b);
@@ -78,12 +106,12 @@ int Crypt::encrypt(char* _m ,char * _c)
 
     char m_tmp[digits];
     int m_tmp_i = -1;
-    char tmp[2];
+    char tmp[digits];
     std::string s;
 
     for(int i=0; i < blocks; i++){
 
-        m.copy(m_tmp,digits,(i*blocks));
+        m.copy(m_tmp,digits,(i*digits));
 
         for(int j =0;j < digits; j++){
             int k = (int)m_tmp[j];
@@ -92,19 +120,44 @@ int Crypt::encrypt(char* _m ,char * _c)
         }
         m_tmp_i = atoi(s.c_str());
 
-        BIGNUM *num_tmp2;
-        num_tmp2 = BN_new();
         
-        //BN_dec2bn()
+        BIGNUM *bn_c = BN_new();
+        BIGNUM *bn_n = BN_new();
+        BIGNUM *bn_e = BN_new();
+        BIGNUM *num_tmp = BN_new();
+        
+        BN_CTX *ctx = BN_CTX_new();
 
-        //BN_mod_exp(num_tmp,)
+        BN_dec2bn(&bn_c,s.c_str());
 
-        int num_tmp = (pow(m_tmp_i,pub_key[_KEY_E]));
-        //sscanf(m_tmp, "%d" , &m_tmp_i);
-       // int pot = pow(m_tmp_i,pub_key[_KEY_E]);
-        _c[i] = num_tmp % pub_key[_KEY_N];
+        // TODO
+        //char key_e[1024], key_n[1024];
+        //sprintf(key_e,"%d",pub_key[_KEY_E]);
+        BN_dec2bn(&bn_e,key[_KEY_E]);
+        //sprintf(key_n,"%d",pub_key[_KEY_N]);
+        BN_dec2bn(&bn_n,key[_KEY_N]);
+
+        printf("e: %s",key[_KEY_E]);
+        printf("n: %s",key[_KEY_N]);
+        printf("m: %s",s.c_str());
+        //BN_print(stdout,bn1);
+        //BN_print(stdout,bn2);
+        //BN_print(stdout,bn3);
+
+        BN_mod_exp(num_tmp,bn_c,bn_e,bn_n,ctx);
+
+        //char * test = (char *) malloc(BN_num_bytes(num_tmp));
+        //test = BN_bn2dec(num_tmp);
+        //printf("encrypted: %s",test);
+        //TODO: use BIGNUM, int is to small
+        //int num_tmp = (pow(m_tmp_i,pub_key[_KEY_E]));
+        //char * test = (char *) malloc(BN_num_bytes(num_tmp));
+        //test = BN_bn2dec(num_tmp);
+        retval.append(BN_bn2dec(num_tmp)); //num_tmp % pub_key[_KEY_N];
 
     }
+
+    retval.copy(_c,retval.length(),0);
 
     return 1;
     
@@ -146,11 +199,11 @@ int Crypt::modInverse(int _phi, int _e){
 
 void Crypt::genKey()
 {
-    printf("generating Keys ...");
-    int p = 47, q = 59;
+    //printf("generating Keys ...");
+    /*int p = generatePrime(64), q = generatePrime(64);
     int n = p* q;
     int phi = (p-1)*(q-1);
-    int e = 157;
+    int e = generatePrime(128);
     int d = modInverse(phi,e);
 
     key[_KEY_E] = e;
@@ -159,12 +212,61 @@ void Crypt::genKey()
     key[_KEY_D] = d;
     printf("private key \n n: %d, d: %d\n",n,d);
 
+     */
+    BIGNUM *n_bn, *phi_bn, *d_bn;
+    n_bn = BN_new();
+    phi_bn = BN_new();
+    d_bn = BN_new();
+
+    BN_CTX * ctx = BN_CTX_new();
+    
+    char *p = "47";//generatePrime(64);
+    char *q = "59";//generatePrime(64);
+    char *e = "157";//generatePrime(128);
+
+    BIGNUM * bn_p = NULL;
+    BIGNUM * bn_q = NULL;
+    BIGNUM *bn_e = NULL;
+
+    BN_dec2bn(&bn_p,p);
+    BN_dec2bn(&bn_q,q);
+    BN_dec2bn(&bn_e,e);
+
+    // calculate n
+    BN_mul(n_bn,bn_p,bn_q,ctx);
+
+    //calculate phi
+    BIGNUM *tmp1 = BN_new();
+    BIGNUM *tmp2 =  BN_new();
+    BIGNUM *one =  BN_new();
+    BN_dec2bn(&one,"1");
+    BN_sub(tmp1,bn_p,one);
+    BN_sub(tmp2,bn_q,one);
+    BN_mul(phi_bn,tmp1,tmp2,ctx);
+
+    // calculate d
+    BN_mod_inverse(d_bn,bn_e,phi_bn,ctx);
+
+    key[_KEY_E] =  (char *) malloc(BN_num_bytes(bn_e));
+    key[_KEY_E] = BN_bn2dec(bn_e);
+    key[_KEY_N] =  (char *) malloc(BN_num_bytes(n_bn));
+    key[_KEY_N] = BN_bn2dec(n_bn);
+    key[_KEY_D] =  (char *) malloc(BN_num_bytes(d_bn));
+    key[_KEY_D] = BN_bn2dec(d_bn);
+
+    //char * prime = (char *) malloc(BN_num_bytes(d_bn));
+    //prime = BN_bn2dec(d_bn);
+    //printf("d: %s", prime);
+    //char * prime = (char *) malloc(BN_num_bytes(n_bn));
+    //prime = BN_bn2dec(n_bn);
+    //printf("key \n n: %d",prime);
+
 }
 
 
-char * Crypt::generatePrime(long numBit) {
+char * Crypt::generatePrime(int numBit) {
 
-   /* char *prime;
+    char *prime;
     BIGNUM *num_tmp;
     num_tmp = BN_new();
 
@@ -172,9 +274,10 @@ char * Crypt::generatePrime(long numBit) {
     prime = (char *) malloc(BN_num_bytes(num_tmp));
     prime = BN_bn2dec(num_tmp);
     BN_free(num_tmp);
-    return prime;*/
+    return prime;
+
     //free(prime);
     //BN_free(num_tmp);
-    return NULL;
+    //return NULL;
 }
 

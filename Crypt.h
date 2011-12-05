@@ -9,6 +9,7 @@
 #ifndef _CRYPT_H
 #define	_CRYPT_H
 
+#define _KEY_LENGTH 1024
 #define _KEY_D 0
 #define _KEY_N 1
 #define _KEY_E 2
@@ -19,14 +20,14 @@ public:
     Crypt(const Crypt& orig);
     virtual ~Crypt();
 
-    char * generatePrime(long numBit);
-    int decrypt( char* c, char * m);
-    int encrypt(char* m, char * c);
+    int decrypt( char* c, char* m);
+    int encrypt(char* m, char* c);
     void genKey();
 
 private:
+    char * generatePrime(int numBit);
     int modInverse(int phi, int e);
-    int key[3];
+    char* key[3];
 
 };
 
