@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 
 void Connection() {
@@ -30,52 +31,58 @@ void error(const char *msg) {
     exit(1);
 }
 
-void *listener(void * _port){
 
-    printf("waiting for messages...\n");
-    int port = (int)_port;
-     int sockfd, newsockfd, pid;
+void *newconnection(void * fd) {
+       int n;
+       char buffer[256];
+       int newsockfd=(int)fd;
+       bzero(buffer, 256);
+       n = read(newsockfd, buffer, 255);
+       if (n < 0) perror("ERROR reading from socket");
+           printf(">>%s", buffer);
+
+       pthread_exit(NULL);
+}
+
+void *listener(void * _port){
+        int  port=(int )_port;
+   
+        int sockfd, newsockfd;
         socklen_t clilen;
         struct sockaddr_in serv_addr, cli_addr;
 
         sockfd = socket(AF_INET, SOCK_STREAM, 0);
-        if (sockfd < 0)
-            error("ERROR opening socket");
+        if (sockfd < 0) {
+            perror("ERROR opening socket");
+            pthread_exit(NULL);
+        }
+
         bzero((char *) & serv_addr, sizeof (serv_addr));
         serv_addr.sin_family = AF_INET;
         serv_addr.sin_addr.s_addr = INADDR_ANY;
         serv_addr.sin_port = port;
 
 
-        if (bind(sockfd, (struct sockaddr *) & serv_addr, sizeof (serv_addr)) < 0)
-            error("ERROR on binding");
+        if (bind(sockfd, (struct sockaddr *) & serv_addr, sizeof (serv_addr)) < 0) {
+            perror("ERROR on binding");
+            pthread_exit(NULL);
+        }
+
         listen(sockfd, 5);
         clilen = sizeof (cli_addr);
-
+        
+        
         while (1) {
 
-            //printf("Waiting for messages\n");
-            newsockfd = accept(sockfd,
-                    (struct sockaddr *) & cli_addr, &clilen);
-            if (newsockfd < 0)
-                error("ERROR on accept");
-            pid = fork();
-            if (pid < 0)
-                error("ERROR on fork");
-            if (pid == 0) {
-                close(sockfd);
-                int n;
-                char buffer[256];
-
-                bzero(buffer, 256);
-                n = read(newsockfd, buffer, 255);
-                if (n < 0) error("ERROR reading from socket");
-                printf("message: %s", buffer);
-
-                exit(0);
-            } else close(newsockfd);
-        } // end of while
-        close(sockfd);
+            newsockfd = accept(sockfd,(struct sockaddr *) & cli_addr, &clilen);
+            if (newsockfd < 0) {
+                    perror("ERROR on accept");
+                    continue;
+            }
+            pthread_t p1;
+            pthread_create(&p1,NULL,newconnection,(void *)newsockfd);
+              
+        } 
      
 }
 
@@ -83,21 +90,19 @@ void *connector(void * _target){
 
         struct host* target = (struct host*)_target;
 
-        printf("connecting...");
-
         struct sockaddr_in stSockAddr;
         int Res;
         char buffer[82];
-        int n;
+        int ret;
 
 
         while (1) {
 
             int SocketFD = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-
+            printf("Trying to connect to %s on port %d...\n",target->ip,target->port);
             if (-1 == SocketFD) {
-                perror("cannot create socket");
-                exit(EXIT_FAILURE);
+                perror("Cannot create socket");
+                pthread_exit(NULL);
             }
 
             memset(&stSockAddr, 0, sizeof (stSockAddr));
@@ -109,28 +114,28 @@ void *connector(void * _target){
             if (0 > Res) {
                 perror("error: first parameter is not a valid address family");
                 close(SocketFD);
-                exit(EXIT_FAILURE);
+                 pthread_exit(NULL);
             } else if (0 == Res) {
                 perror("char string (second parameter does not contain valid ipaddress)");
                 close(SocketFD);
-                exit(EXIT_FAILURE);
+                 pthread_exit(NULL);
             }
-
-            if (-1 == connect(SocketFD, (struct sockaddr *) & stSockAddr, sizeof (stSockAddr))) {
-                perror("connect failed");
+            
+            ret=connect(SocketFD, (struct sockaddr *) & stSockAddr, sizeof (stSockAddr));
+            if (ret == 0 ) {
+               
+                bzero(buffer, 82);
+                fgets(buffer, 80, stdin);
+                send(SocketFD, buffer, strlen(buffer),0);
                 close(SocketFD);
-                exit(EXIT_FAILURE);
+            } else {
+                printf("Faild connecting. Trying again in 5 seconds.\n");
+                fflush( stdout );
+                sleep(5);
             }
 
-            printf("Please enter your message: ");
-            bzero(buffer, 82);
-            fgets(buffer, 80, stdin);
-            write(SocketFD, buffer, strlen(buffer));
-            n = read(SocketFD, buffer, 80);
-            //printf("The return message was\n");
-            //write(1, buffer, n);
-
-            close(SocketFD);
+            
+            
 
         }
 }

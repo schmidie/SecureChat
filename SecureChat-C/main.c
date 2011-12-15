@@ -21,16 +21,15 @@ int main(int argc, char** argv) {
 
     pthread_t p1, p2;
 
-    int n;
+    int ret,n,listening,connecting;
 
    // char input[256];
 
     char nick[256];
-    char host[256];
-    int port = 0;
+
     int hasValue_1=0;
     int hasValue_2=0;
-
+   
     /*
     while(1){
 
@@ -49,8 +48,11 @@ int main(int argc, char** argv) {
         pch = strtok(NULL,det);
         argc++;
     }
+     *
 */
-    for(n = 1; n <= argc; n++){
+    listening=0;
+    connecting=0;
+    for(n = 1; n < argc; n++){
 
         if(argv[n][0] == '-'){
 
@@ -77,7 +79,6 @@ int main(int argc, char** argv) {
 
                                         //generate new RSA Key
 
-
                                     }
                                     else{
                                         printf("Write nick without - or / \n");
@@ -87,17 +88,16 @@ int main(int argc, char** argv) {
                     case 'c':   {
                                     if(hasValue_1 && hasValue_2){
 
-                                        struct host target;
-
-                                        strcpy(target.ip,argv[n+1]);
-                                        target.port = atoi(argv[n+2]);
-                                        printf("Host: %s \n", host);
-                                        printf("Port: %d \n", port);
-
-                                        //try to connect to host
-                                        //connector(host,port);
-
-                                        pthread_create(&p2,NULL,connector, &target);
+                                        struct host * target;
+                                        target=(struct host*)malloc(sizeof(struct host));
+                                        target->ip =(char*)malloc(strlen(argv[n+1]));
+                                        strcpy(target->ip,argv[n+1]);
+                                        target->port = atoi(argv[n+2]);
+                                        
+                                        ret=pthread_create(&p2,NULL,connector,(void *) target);
+                                        if(!ret){
+                                            connecting=1;
+                                        }
 
                                     }
                                     else{
@@ -107,12 +107,14 @@ int main(int argc, char** argv) {
                                 }
                     case 'l':   {
                                     if(hasValue_1){
-                                        port = atoi(argv[n+1]);
-                                        printf("Port: %d \n", port);
-
+                                        int  port =atoi(argv[n+1]);
+                                       
                                         //listen for connections
-                                        pthread_create(&p1,NULL,listener,(void *) port);
-
+                                        printf("Listening on port: %d\n",port);
+                                        ret=pthread_create(&p1,NULL,listener,(void *) port);
+                                        if(!ret){
+                                            listening=1;
+                                        }
                                     }
                                     else{
                                         printf("Write port without - or / \n");
@@ -141,8 +143,13 @@ int main(int argc, char** argv) {
     }
 
    // genKey();
-    pthread_join(&p1,NULL);
-    pthread_join(&p2,NULL);
+    if(listening) {
+        pthread_join(p1,NULL);
+    }
+    if(connecting) {
+        pthread_join(p2,NULL);
+    }
+
     return (EXIT_SUCCESS);
 }
 
