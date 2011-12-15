@@ -1,13 +1,13 @@
 /*
- * File:   Crypt.h
+ * File:   Crypto.h
  * Author: develop
  *
  * Created on 21. November 2011, 20:00
 */
 
 
-#ifndef _CRYPT_H
-#define	_CRYPT_H
+#ifndef _CRYPTO_H
+#define	_CRYPTO_H
 
 #define _KEY_LENGTH 1024
 #define _KEY_D 0
@@ -28,5 +28,5 @@ int modInverse(int phi, int e);
 char* key[3];
 
 
-#endif	/* _CRYPT_H */
+#endif	/* _CRYPTO_H */
 

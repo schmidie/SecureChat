@@ -8,8 +8,6 @@
 #ifndef _CONNECTION_H
 #define	_CONNECTION_H
 
-#define _PORT 51718
-#define _ADDRESS 127.0.0.1
 #define _READMODE 0
 #define _WRITEMODE 1
 
