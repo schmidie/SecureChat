@@ -14,7 +14,6 @@
 
 #include <arpa/inet.h>
 
-
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,17 +31,7 @@ void error(const char *msg) {
 }
 
 
-void *newconnection(void * fd) {
-       int n;
-       char buffer[256];
-       int newsockfd=(int)fd;
-       bzero(buffer, 256);
-       n = read(newsockfd, buffer, 255);
-       if (n < 0) perror("ERROR reading from socket");
-           printf(">>%s", buffer);
 
-       pthread_exit(NULL);
-}
 
 void *listener(void * _port){
         int  port=(int )_port;
@@ -70,17 +59,34 @@ void *listener(void * _port){
 
         listen(sockfd, 5);
         clilen = sizeof (cli_addr);
-        
-        
-        while (1) {
 
-            newsockfd = accept(sockfd,(struct sockaddr *) & cli_addr, &clilen);
+        newsockfd = accept(sockfd,(struct sockaddr *) & cli_addr, &clilen);
             if (newsockfd < 0) {
                     perror("ERROR on accept");
-                    continue;
+                    pthread_exit(NULL);
             }
-            pthread_t p1;
-            pthread_create(&p1,NULL,newconnection,(void *)newsockfd);
+
+        int n;
+        char buffer[256];
+
+        fd_set listener_set;
+        FD_ZERO(&listener_set);
+        FD_SET(newsockfd, &listener_set);
+        while (1) {
+           bzero(buffer, 256);
+           select(1+newsockfd,&listener_set,NULL,NULL,NULL);
+           n = read(newsockfd, buffer, 255);
+           if (n < 0)
+           {
+               perror("ERROR reading from socket");
+           } else if(n==0) {
+               close(newsockfd);
+               pthread_exit(NULL);
+           } else {
+                printf(">>%s", buffer);
+           }
+
+            
               
         } 
      
@@ -123,11 +129,13 @@ void *connector(void * _target){
             
             ret=connect(SocketFD, (struct sockaddr *) & stSockAddr, sizeof (stSockAddr));
             if (ret == 0 ) {
-               
-                bzero(buffer, 82);
-                fgets(buffer, 80, stdin);
-                send(SocketFD, buffer, strlen(buffer),0);
-                close(SocketFD);
+                printf("Connection successfully established.\n");
+                while(1) {
+                    bzero(buffer, 82);
+                    fgets(buffer, 80, stdin);
+                    send(SocketFD, buffer, strlen(buffer),0);
+                }
+                
             } else {
                 printf("Faild connecting. Trying again in 5 seconds.\n");
                 fflush( stdout );
