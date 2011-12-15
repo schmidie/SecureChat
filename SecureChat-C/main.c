@@ -7,6 +7,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
 #include <string.h>
 
 #include "crypto.h"
@@ -17,15 +19,38 @@
  */
 int main(int argc, char** argv) {
 
-    int n, l;
+    pthread_t p1, p2;
+
+    int n;
+
+   // char input[256];
 
     char nick[256];
     char host[256];
-    int port;
+    int port = 0;
     int hasValue_1=0;
     int hasValue_2=0;
 
-    for(n = 1; n < argc; n++){
+    /*
+    while(1){
+
+        argc = 1;
+
+    printf(">>");
+    gets(input);
+    
+    char* pch;
+    char det[] = " ";
+
+    pch = strtok(input,det);
+
+    while(pch != NULL){
+        sprintf(argv[argc],"%s",pch);
+        pch = strtok(NULL,det);
+        argc++;
+    }
+*/
+    for(n = 1; n <= argc; n++){
 
         if(argv[n][0] == '-'){
 
@@ -61,12 +86,18 @@ int main(int argc, char** argv) {
                                 }
                     case 'c':   {
                                     if(hasValue_1 && hasValue_2){
-                                        strcpy(host,argv[n+1]);
-                                        port = (int)argv[n+2];
+
+                                        struct host target;
+
+                                        strcpy(target.ip,argv[n+1]);
+                                        target.port = atoi(argv[n+2]);
                                         printf("Host: %s \n", host);
                                         printf("Port: %d \n", port);
 
                                         //try to connect to host
+                                        //connector(host,port);
+
+                                        pthread_create(&p2,NULL,connector, &target);
 
                                     }
                                     else{
@@ -76,10 +107,11 @@ int main(int argc, char** argv) {
                                 }
                     case 'l':   {
                                     if(hasValue_1){
-                                        port = (int)argv[n+1];
+                                        port = atoi(argv[n+1]);
                                         printf("Port: %d \n", port);
 
                                         //listen for connections
+                                        pthread_create(&p1,NULL,listener,(void *) port);
 
                                     }
                                     else{
@@ -98,6 +130,7 @@ int main(int argc, char** argv) {
                                     }
                                     break;
                                 }
+
                                     
                     default:    printf("Illegal argument. \n");
                                 break;
@@ -108,7 +141,8 @@ int main(int argc, char** argv) {
     }
 
    // genKey();
-    
+    pthread_join(&p1,NULL);
+    pthread_join(&p2,NULL);
     return (EXIT_SUCCESS);
 }
 

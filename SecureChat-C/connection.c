@@ -30,9 +30,10 @@ void error(const char *msg) {
     exit(1);
 }
 
-void listener(int port){
+void *listener(void * _port){
 
-    
+    printf("waiting for messages...\n");
+    int port = (int)_port;
      int sockfd, newsockfd, pid;
         socklen_t clilen;
         struct sockaddr_in serv_addr, cli_addr;
@@ -78,7 +79,11 @@ void listener(int port){
      
 }
 
-void connector(char * host, int port){
+void *connector(void * _target){
+
+        struct host* target = (struct host*)_target;
+
+        printf("connecting...");
 
         struct sockaddr_in stSockAddr;
         int Res;
@@ -98,8 +103,8 @@ void connector(char * host, int port){
             memset(&stSockAddr, 0, sizeof (stSockAddr));
 
             stSockAddr.sin_family = AF_INET;
-            stSockAddr.sin_port = port;
-            Res = inet_pton(AF_INET, host, &stSockAddr.sin_addr);
+            stSockAddr.sin_port = target->port;
+            Res = inet_pton(AF_INET, target->ip, &stSockAddr.sin_addr);
 
             if (0 > Res) {
                 perror("error: first parameter is not a valid address family");

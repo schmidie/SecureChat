@@ -8,11 +8,16 @@
 #ifndef _CONNECTION_H
 #define	_CONNECTION_H
 
+struct host{
+    char* ip;
+    int port;
+};
+
 void Connection();
 
-void listener(int port);
+void *listener(void * port);
 
-void connector(char * host, int port);
+void *connector(void * target);
 
 void error(const char *msg);
 
