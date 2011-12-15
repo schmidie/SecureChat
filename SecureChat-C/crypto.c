@@ -5,7 +5,7 @@
  * Created on 21. November 2011, 20:00
 */
 
-#include "Crypto.h"
+#include "crypto.h"
 #include <openssl/bn.h>
 #include <openssl/crypto.h>
 #include <math.h>

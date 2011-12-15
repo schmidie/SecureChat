@@ -5,7 +5,7 @@
  * Created on 23. November 2011, 12:45
  */
 
-#include "Connection.h"
+#include "connection.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -129,3 +129,4 @@ void connector(char * host, int port){
 
         }
 }
+

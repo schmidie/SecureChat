@@ -8,8 +8,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "Crypto.h"
-#include "Connection.h"
+
+#include "crypto.h"
+#include "connection.h"
 
 /*
  * 
