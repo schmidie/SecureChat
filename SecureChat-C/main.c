@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "Crypto.h"
+#include "Connection.h"
 
 /*
  * 
@@ -47,6 +48,10 @@ int main(int argc, char** argv) {
                                     if(hasValue_1){
                                         strcpy(nick,argv[n+1]);
                                         printf("Nick: %s \n", nick);
+
+                                        //generate new RSA Key
+
+
                                     }
                                     else{
                                         printf("Write nick without - or / \n");
@@ -59,6 +64,9 @@ int main(int argc, char** argv) {
                                         port = (int)argv[n+2];
                                         printf("Host: %s \n", host);
                                         printf("Port: %d \n", port);
+
+                                        //try to connect to host
+
                                     }
                                     else{
                                         printf("Write nick without - or / \n");
@@ -69,6 +77,9 @@ int main(int argc, char** argv) {
                                     if(hasValue_1){
                                         port = (int)argv[n+1];
                                         printf("Port: %d \n", port);
+
+                                        //listen for connections
+
                                     }
                                     else{
                                         printf("Write port without - or / \n");
@@ -77,6 +88,7 @@ int main(int argc, char** argv) {
                                 }
                     case 'r':   {
                                     if(hasValue_1){
+                                        // change nickname
                                         strcpy(nick,argv[n+1]);
                                         printf("Nick: %s \n", nick);
                                     }

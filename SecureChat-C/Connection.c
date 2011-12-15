@@ -7,33 +7,21 @@
 
 #include "Connection.h"
 
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <stdio.h>
+#include <netinet/in.h>
+
+#include <arpa/inet.h>
+
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+
 
 void Connection() {
 
-
-}
-
-void setPort(int _port) {
-    port = _port;
-}
-
-int getPort() {
-    return port;
-}
-
-void writeMsg(char *) {
-
-}
-
-char * readMsg() {
 
 }
 
@@ -42,14 +30,10 @@ void error(const char *msg) {
     exit(1);
 }
 
-void changeMode(int _mode) {
+void listener(int port){
 
-    //printf("change mode to %d \n", (int)_mode);
-    mode = (int) _mode;
-    //port == NULL ? m_port = htons(_PORT) : m_port = htons(port);
-
-    if (mode == _READMODE) {
-        int sockfd, newsockfd, pid;
+    
+     int sockfd, newsockfd, pid;
         socklen_t clilen;
         struct sockaddr_in serv_addr, cli_addr;
 
@@ -89,10 +73,12 @@ void changeMode(int _mode) {
 
                 exit(0);
             } else close(newsockfd);
-        } /* end of while */
+        } // end of while
         close(sockfd);
+     
+}
 
-    } else if (mode == _WRITEMODE) {
+void connector(char * host, int port){
 
         struct sockaddr_in stSockAddr;
         int Res;
@@ -113,7 +99,7 @@ void changeMode(int _mode) {
 
             stSockAddr.sin_family = AF_INET;
             stSockAddr.sin_port = port;
-            Res = inet_pton(AF_INET, "127.0.0.1", &stSockAddr.sin_addr);
+            Res = inet_pton(AF_INET, host, &stSockAddr.sin_addr);
 
             if (0 > Res) {
                 perror("error: first parameter is not a valid address family");
@@ -142,6 +128,4 @@ void changeMode(int _mode) {
             close(SocketFD);
 
         }
-
-    }
 }

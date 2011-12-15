@@ -8,25 +8,13 @@
 #ifndef _CONNECTION_H
 #define	_CONNECTION_H
 
-#define _READMODE 0
-#define _WRITEMODE 1
-
 void Connection();
 
-void setPort(int port);
-int getPort();
+void listener(int port);
 
-void writeMsg(char *);
-char* readMsg();
-
-void changeMode(int mode);
+void connector(char * host, int port);
 
 void error(const char *msg);
-
-
-int port;
-char * adr;
-int mode;
 
 
 #endif	/* _CONNECTION_H */
