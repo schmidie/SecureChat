@@ -1,0 +1,5 @@
+chat
+Makefile-SecureChat-C.mk
+.dep.inc
+*.o
+nbproject
