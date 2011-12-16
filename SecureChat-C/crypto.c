@@ -6,224 +6,136 @@
 */
 
 #include "crypto.h"
-#include <openssl/bn.h>
-#include <openssl/crypto.h>
 #include <math.h>
+#include <string.h>
 
-
-void Crypt()
-{
-
-}
-
-
-int getDecryptedSize(char *c){
-
-    // bei Ascii mit max 3 stellen
-
-}
-int getEncryptedSize(char *m){
-
-    // bei Ascii mit max 3 stellen
-}
-
-char* padding(int ascii){
-    /*
-   // bei Ascii mit max 3 stellen
-    char retval[3];
-    if(ascii >0){
-        if(ascii < 10){
-            retval[0]= '0';
-            retval[1]='0';
-            retval[2]= itoa(ascii);
-        }
-        else if(ascii < 100){
-            retval[0]=itoa(0);
-            retval[1]=itoa(floor(ascii /10));
-            retval[2]= itoa(ascii%10);
-        }
-        else if(ascii < 1000){
-            retval[0]=floor(ascii /100);
-            retval[1]= floor((ascii%100) /10);
-            retval[2]= ascii%10;
-        }
-    }
-
-    return retval;*/return NULL;
-}
-
-int decrypt(char* _c, char * _m)
-{
-/*
-     std::string c(_c);
-    int priv_key[3];
-
-    // get key from database
-    priv_key[_KEY_D] = key[_KEY_D];
-    priv_key[_KEY_N] = key[_KEY_N];
-
-    const int digits = (((int)log10(priv_key[_KEY_N])+1)/2);
-    int size_m = strlen(_c);
-    double b = (double)strlen(_c)/(double)digits;
-    const int blocks = ceil(b);
- * */
-/*
-    std::string c(_c);
-    std::string retval;
-
-    const int digits = (((int)log10(atoi(key[_KEY_N]))+1));
-    int size_m = strlen(_c);
-    double b = (double)strlen(_c)/(double)digits;
-    const int blocks = ceil(b);
-
-    char c_tmp[digits];
-    int c_tmp_i = 0;
-    std::string s;
-
-    for(int i=0; i < blocks; i++){
-
-        c.copy(c_tmp,digits,(i*digits));
-        c_tmp_i = atoi(c_tmp);
-        s.append(c_tmp);
-
-        BIGNUM *bn_c = BN_new();
-        BIGNUM *bn_n = BN_new();
-        BIGNUM *bn_d = BN_new();
-        BIGNUM *num_tmp = BN_new();
-
-        BN_CTX *ctx = BN_CTX_new();
-
-        BN_dec2bn(&bn_c,s.c_str());
-        BN_dec2bn(&bn_d,key[_KEY_D]);
-        BN_dec2bn(&bn_n,key[_KEY_N]);
-
-        BN_mod_exp(num_tmp,bn_c,bn_d,bn_n,ctx);
-        printf("DEC:%s = %s ^ %s mod %s \n",BN_bn2dec(num_tmp),s.c_str(),key[_KEY_D],key[_KEY_N] );
-        retval.append(BN_bn2dec(num_tmp));
-
-        //TODO: use BIGNUM, int is to small
-       // int num_tmp = (int)pow(c_tmp_i,priv_key[_KEY_D]);
-        //_m[i] = num_tmp % priv_key[_KEY_N];
-
-    }
-    BIGNUM *ret_bn = BN_new();
-    BN_dec2bn(&ret_bn,retval.c_str());
-    _m = (char *) malloc(BN_num_bytes(ret_bn));
-    retval.copy(_m,retval.size(),0);
-
-    return 1;*/return NULL;
-
-}
-int encrypt(char* _m , char* _c)
-{
-
-    //std::string m(_m);
-    //std::string retval;
-
-    // get key from database
-    //pub_key[_KEY_E] = key[_KEY_E];
-    //pub_key[_KEY_N] = key[_KEY_N];
-
-    /*
-    char* _c = (char *) malloc(length_m + 1);
-
-    //Anzahl der Stellen pro Block
-    const int digits = (((int)log10(atoi(key[_KEY_N]))+1))/2;
+ unsigned char * decrypt(unsigned char *crypted,int msglength) {
+   
+    int i;
     
-    double b = length_m/(double)digits;
-    //Anzahl der Bloecke
-    const int blocks = ceil(b);
+    int blocksize=BN_num_bytes(n_bn);  //Get the length of n
+   
+    int blockcount=ceil((double)msglength/(double)blocksize);
 
-    //int c[blocks];
+    unsigned char * message=malloc(msglength);
 
-    char m_tmp[digits];
-    int m_tmp_i = -1;
-    char tmp[digits];
-    std::string s;
+    for(i=0;i<blockcount;i++) {
 
-    for(int i=0; i < blocks; i++){
+        unsigned char * cryptedblock=malloc(blocksize);
+        unsigned char * decryptedBlock=malloc(blocksize);
 
-        m.copy(m_tmp,digits,(i*digits));
+        memcpy(cryptedblock,crypted+i*blocksize,blocksize);
+      
+        decryptBlock(cryptedblock,blocksize,decryptedBlock);
 
-        for(int j =0;j < digits; j++){
-            int k = (int)m_tmp[j];
-            sprintf(tmp,"%d",k);
+        memcpy(message+i*blocksize,decryptedBlock,blocksize);
 
-            s.append(tmp);
-        }
-        m_tmp_i = atoi(s.c_str());
-
-
-        BIGNUM *bn_m = BN_new();
-        BIGNUM *bn_n = BN_new();
-        BIGNUM *bn_e = BN_new();
-        BIGNUM *num_tmp = BN_new();
-
-        BN_CTX *ctx = BN_CTX_new();
-
-        BN_dec2bn(&bn_m,s.c_str());
-
-        // TODO
-        //char key_e[1024], key_n[1024];
-        //sprintf(key_e,"%d",pub_key[_KEY_E]);
-        BN_dec2bn(&bn_e,key[_KEY_E]);
-        //sprintf(key_n,"%d",pub_key[_KEY_N]);
-        BN_dec2bn(&bn_n,key[_KEY_N]);
-
-        //printf("e: %s",key[_KEY_E]);
-        //printf("n: %s",key[_KEY_N]);
-        //printf("m: %s",s.c_str());
-        //BN_print(stdout,bn1);
-        //BN_print(stdout,bn2);
-        //BN_print(stdout,bn3);
-
-        BN_mod_exp(num_tmp,bn_m,bn_e,bn_n,ctx);
-
-        //char * test = (char *) malloc(BN_num_bytes(num_tmp));
-        //test = BN_bn2dec(num_tmp);
-        //printf("encrypted: %s",test);
-        //TODO: use BIGNUM, int is to small
-        //int num_tmp = (pow(m_tmp_i,pub_key[_KEY_E]));
-        //char * test = (char *) malloc(BN_num_bytes(num_tmp));
-        //test = BN_bn2dec(num_tmp);
-
-
-        printf("ENC: %s = %s ^ %s mod %s \n",BN_bn2dec(num_tmp),s.c_str(),key[_KEY_E],key[_KEY_N] );
-
-        retval.append(BN_bn2dec(num_tmp)); //num_tmp % pub_key[_KEY_N];
+        free(cryptedblock);
+        free(decryptedBlock);
 
     }
+    return message; 
 
-    BIGNUM *ret_bn = BN_new();
-    BN_dec2bn(&ret_bn,retval.c_str());
-    _c = (char *) malloc(BN_num_bytes(ret_bn));
-    retval.copy(_c,retval.size(),0);
+}
 
-    return 1;
- * */
-    return NULL;
+ unsigned char * encrypt( unsigned char *message,int msglength) {
+   
+    int i;
+   
+    int blocksize=BN_num_bytes(n_bn); //Get the length of n
+   
+    int blockcount=ceil((double)msglength/(double)blocksize);
+    unsigned char * crypted=malloc(msglength);
+    
+    for(i=0;i<blockcount;i++) {
+
+        unsigned char * block=malloc(blocksize);
+        unsigned char * encryptedBlock=malloc(blocksize);
+
+        int copySize=blocksize;
+
+        if((msglength-i*blocksize)<blocksize) {
+            copySize=msglength-i*blocksize;
+        }
+
+        memcpy(block,message+i*blocksize,copySize);
+       
+        encryptBlock(block,copySize,encryptedBlock);
+        
+        memcpy(crypted+i*blocksize,encryptedBlock,blocksize);
+
+        free(encryptedBlock);
+        free(block);
+    }
+    return crypted; 
+
+}
+
+
+void decryptBlock( const unsigned char* crypted,int length, unsigned char * message)
+{
+
+    BIGNUM * bn_crypted = BN_new();
+    BN_bin2bn(crypted,length,bn_crypted);
+
+   
+    BIGNUM *bn_decrypted = BN_new();
+    BN_CTX *ctx = BN_CTX_new();
+
+    BN_mod_exp(bn_decrypted,bn_crypted,d_bn,n_bn,ctx);
+    
+   
+    BN_bn2bin(bn_decrypted,message);
+    BN_free(bn_crypted);
+    BN_free(bn_decrypted);
+    BN_CTX_free(ctx);
+   
+
+}
+void encryptBlock( const unsigned char* message ,int length, unsigned char* crypted)
+{
+    int n_size=BN_num_bytes(n_bn);
+    int i;
+    unsigned char * paddedmsg=malloc(n_size);
+    memcpy(paddedmsg,message,length);
+    for(i=length;i<n_size;i++) {
+        paddedmsg[i]='\0';
+    }
+
+    BIGNUM * bn_message= BN_new();
+    BN_bin2bn(paddedmsg,n_size,bn_message);
+    free(paddedmsg);
+    
+    BIGNUM *bn_crypted = BN_new();
+    BN_CTX *ctx = BN_CTX_new();
+
+    BN_mod_exp(bn_crypted,bn_message,e_bn,n_bn,ctx);
+    
+    BN_bn2bin(bn_crypted,crypted);
+
+    BN_free(bn_crypted);
+    BN_free(bn_message);
+    BN_CTX_free(ctx);
 
 }
 
 
 void genKey()
 {
+    //TODO: FIX KEYS
+    n_bn = BN_new();
+    e_bn = BN_new();
+    d_bn = BN_new();
 
-    BIGNUM *n_bn = BN_new();
-    BIGNUM *phi_bn = BN_new();
-    BIGNUM *e_bn = BN_new();
-
-    BIGNUM * p_bn = NULL;
-    BIGNUM * q_bn = NULL;
-    BIGNUM *d_bn = NULL;
+    BIGNUM * phi_bn = BN_new();
+    BIGNUM * p_bn = BN_new();
+    BIGNUM * q_bn = BN_new();
 
     BN_CTX * ctx = BN_CTX_new();
 
     char *p = generatePrime(64);
     char *q = generatePrime(64);
     char *d = generatePrime(72);
-
-
 
     BN_dec2bn(&p_bn,p);
     BN_dec2bn(&q_bn,q);
@@ -242,35 +154,34 @@ void genKey()
     BN_mul(phi_bn,tmp1,tmp2,ctx);
 
     // calculate e
-    BN_mod_inverse(e_bn,d_bn,phi_bn,ctx);
-
-    // store the key
-    key[_KEY_E] =  (char *) malloc(BN_num_bytes(e_bn));
-    key[_KEY_E] = BN_bn2dec(e_bn);
-    key[_KEY_N] =  (char *) malloc(BN_num_bytes(n_bn));
-    key[_KEY_N] = BN_bn2dec(n_bn);
-    key[_KEY_D] =  (char *) malloc(BN_num_bytes(d_bn));
-    key[_KEY_D] = BN_bn2dec(d_bn);
-
-    printf("E: %s, N: %s, D: %s \n", key[_KEY_E],key[_KEY_N],key[_KEY_D]);
+    BN_mod_inverse(e_bn,d_bn,phi_bn,ctx);  
+    
+    //release things
+    free(q);
+    free(p);
+    free(d);
+    BN_CTX_free(ctx);
+    BN_free(tmp1);
+    BN_free(tmp2);
+    BN_free(one);
+    BN_free(phi_bn);
+    BN_free(q_bn);
+    BN_free(p_bn);
 
 }
 
-char * generatePrime(int numBit) {
+ char * generatePrime(int numBit) {
 
     char *prime;
     BIGNUM *num_tmp;
     num_tmp = BN_new();
 
     BN_generate_prime(num_tmp, numBit, 1, NULL, NULL, NULL, NULL);
-    prime = (char *) malloc(BN_num_bytes(num_tmp));
+    prime = ( char *) malloc(BN_num_bytes(num_tmp));
     prime = BN_bn2dec(num_tmp);
     BN_free(num_tmp);
     return prime;
 
-    //free(prime);
-    //BN_free(num_tmp);
-    //return NULL;
 }
 
 

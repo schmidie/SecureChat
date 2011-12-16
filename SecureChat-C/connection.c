@@ -20,18 +20,6 @@
 #include <pthread.h>
 
 
-void Connection() {
-
-
-}
-
-void error(const char *msg) {
-    perror(msg);
-    exit(1);
-}
-
-
-
 
 void *listener(void * _port){
         int  port=(int )_port;

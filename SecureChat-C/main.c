@@ -19,39 +19,30 @@
  */
 int main(int argc, char** argv) {
 
+    genKey();
+
+    /*
+    unsigned char * text="Hallo2kljasldkjalskjdlkasjdlkasjdlkjasldkjalsdlaskjdlkajsdTEst";
+    unsigned char * crypted=encrypt(text,strlen(text));
+    unsigned char * decrypted=decrypt(crypted,strlen(text));
+    printf(decrypted);
+    printf("\n");
+    */
+    
+    // loop and return var definitions
+    int ret,n;
+    
+    // variables for thread-handling
+    int listening,connecting;
     pthread_t p1, p2;
+    listening=0;
+    connecting=0;
 
-    int ret,n,listening,connecting;
-
-   // char input[256];
-
+    //parameter parsing
     char nick[256];
-
     int hasValue_1=0;
     int hasValue_2=0;
    
-    /*
-    while(1){
-
-        argc = 1;
-
-    printf(">>");
-    gets(input);
-    
-    char* pch;
-    char det[] = " ";
-
-    pch = strtok(input,det);
-
-    while(pch != NULL){
-        sprintf(argv[argc],"%s",pch);
-        pch = strtok(NULL,det);
-        argc++;
-    }
-     *
-*/
-    listening=0;
-    connecting=0;
     for(n = 1; n < argc; n++){
 
         if(argv[n][0] == '-'){
@@ -142,7 +133,7 @@ int main(int argc, char** argv) {
                
     }
 
-   // genKey();
+   
     if(listening) {
         pthread_join(p1,NULL);
     }
