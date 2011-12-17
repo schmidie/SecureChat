@@ -13,7 +13,7 @@
 
 #include "crypto.h"
 #include "connection.h"
-
+#include "sqlite.h"
 void print_help() {
      printf("help comming soon! \n");
 }
@@ -25,15 +25,20 @@ void print_help() {
  */
 int main(int argc, char** argv) {
 
+    // loop and return var definitions
+    int ret,n;
+
     if(argc==0) {
         print_help();
     }
-    
-    local_rsa=genKey();
-        
-    // loop and return var definitions
-    int ret,n;
-    
+
+    ret=init_sqlite();
+    if(ret) {
+        return ret;
+    }
+
+    set_data("testname",genKey());
+    get_data(&local_nick,&local_rsa);
     // variables for thread-handling
     int listening,connecting;
     pthread_t p1, p2;
@@ -67,8 +72,8 @@ int main(int argc, char** argv) {
 
                     case 'i':   {
                                     if(hasValue_1){
-                                        strcpy(local_nick,argv[n+1]);
-                                        printf("Nick: %s \n", local_nick);
+                                        set_data(argv[n+1],genKey());
+                                        printf("Nick: %s \n", argv[n+1]);
 
                                         //generate new RSA Key
                                         return (EXIT_SUCCESS);
@@ -83,7 +88,13 @@ int main(int argc, char** argv) {
                                     if(hasValue_1 && hasValue_2){
 
                                         // Todo get the nick from db
-                                        local_nick="Test";
+                                        
+                                        ret=get_data(&local_nick,&local_rsa);
+                                        
+                                        if(ret) {
+                                            printf("Generate keys before you connect to anyone.\n");
+                                            return EXIT_FAILURE;
+                                        }
                                         struct host * target;
                                         target=(struct host*)malloc(sizeof(struct host));
                                         target->ip =(char*)malloc(strlen(argv[n+1]));
@@ -97,7 +108,7 @@ int main(int argc, char** argv) {
 
                                     }
                                     else{
-                                        printf("Specify ip and port of destination.\n");
+                                        printf("Specify ip and port of destination host.\n");
                                     }
                                     break;
                                 }
@@ -105,6 +116,11 @@ int main(int argc, char** argv) {
                                     if(hasValue_1){
                                         int  port =atoi(argv[n+1]);
                                        
+                                        if(ret) {
+                                            printf("Generate keys before you connect to anyone.\n");
+                                            return EXIT_FAILURE;
+                                        }
+                                        
                                         //listen for connections
                                         printf("Listening on port: %d\n",port);
                                         ret=pthread_create(&p1,NULL,listener,(void *) port);
@@ -120,8 +136,8 @@ int main(int argc, char** argv) {
                     case 'r':   {
                                     if(hasValue_1){
                                         // change nickname
-                                        strcpy(local_nick,argv[n+1]);
-                                        printf("Nick: %s \n", local_nick);
+                                        set_nick(argv[n+1]);
+                                        printf("Nick: %s \n", argv[n+1]);
                                         return (EXIT_SUCCESS);
                                     }
                                     else{
@@ -147,7 +163,7 @@ int main(int argc, char** argv) {
     if(connecting) {
         pthread_join(p2,NULL);
     }
-
+    close_sqlite();
     return (EXIT_SUCCESS);
 }
 
