@@ -14,18 +14,18 @@
 #define _KEY_N 1
 #define _KEY_E 2
 
-
+struct RSA {
  BIGNUM *n_bn;
  BIGNUM *e_bn;
  BIGNUM *d_bn;
+};
 
-unsigned char * encrypt(unsigned char *message,int length);
-unsigned char * decrypt( unsigned char *crypted,int length);
-void decryptBlock(const unsigned char* crypted,int length, unsigned char * message);
-void encryptBlock(const unsigned char* message ,int length, unsigned char* crypted);
-void genKey();
-
- char * generatePrime(int numBit);
+int encrypt(unsigned char *message,int length,struct RSA* rsa,unsigned char **crypted);
+int decrypt(unsigned char *crypted,int length,struct RSA* rsa,unsigned char **message);
+void decryptBlock(const unsigned char* crypted,int length, unsigned char * message,struct RSA* rsa);
+void encryptBlock(const unsigned char* message ,int length, unsigned char* crypted,struct RSA* rsa);
+struct RSA * genKey();
+char * generatePrime(int numBit);
 
 
 

@@ -14,20 +14,32 @@
 #include "crypto.h"
 #include "connection.h"
 
+void print_help() {
+     printf("help comming soon! \n");
+}
+
+
+
 /*
  * 
  */
 int main(int argc, char** argv) {
 
-    genKey();
-
-    /*
-    unsigned char * text="Hallo2kljasldkjalskjdlkasjdlkasjdlkjasldkjalsdlaskjdlkajsdTEst";
-    unsigned char * crypted=encrypt(text,strlen(text));
-    unsigned char * decrypted=decrypt(crypted,strlen(text));
-    printf(decrypted);
+    if(argc==0) {
+        print_help();
+    }
+    
+    local_rsa=genKey();
+    
+    unsigned char * text=(unsigned char *)"Hallo2kljasldkjalskjdlkasjdlkasjdlkjasldkjalsdlaskjdlkajsdTEst";
+    unsigned char * crypted;
+    int cryptedsize=encrypt(text,strlen((char *)text),local_rsa,&crypted);
+    unsigned char * decrypted;
+    decrypt(crypted,cryptedsize,local_rsa,&decrypted);
+    char * result=(char *)decrypted;
+    printf("%s", result);
     printf("\n");
-    */
+    
     
     // loop and return var definitions
     int ret,n;
@@ -39,7 +51,7 @@ int main(int argc, char** argv) {
     connecting=0;
 
     //parameter parsing
-    char nick[256];
+    
     int hasValue_1=0;
     int hasValue_2=0;
    
@@ -59,26 +71,29 @@ int main(int argc, char** argv) {
                  switch (argv[n][1]) {
 
                     case 'h':   {
-                                    printf("help comming soon! \n");
-                                    break;
+                                    print_help();
+                                    return (EXIT_SUCCESS);
                                 }
 
                     case 'i':   {
                                     if(hasValue_1){
-                                        strcpy(nick,argv[n+1]);
-                                        printf("Nick: %s \n", nick);
+                                        strcpy(local_nick,argv[n+1]);
+                                        printf("Nick: %s \n", local_nick);
 
                                         //generate new RSA Key
-
+                                        return (EXIT_SUCCESS);
                                     }
                                     else{
                                         printf("Write nick without - or / \n");
+                                        return (EXIT_FAILURE);
                                     }
                                     break;
                                 }
                     case 'c':   {
                                     if(hasValue_1 && hasValue_2){
 
+                                        // Todo get the nick from db
+                                        local_nick="Test";
                                         struct host * target;
                                         target=(struct host*)malloc(sizeof(struct host));
                                         target->ip =(char*)malloc(strlen(argv[n+1]));
@@ -92,7 +107,7 @@ int main(int argc, char** argv) {
 
                                     }
                                     else{
-                                        printf("Write nick without - or / \n");
+                                        printf("Specify ip and port of destination.\n");
                                     }
                                     break;
                                 }
@@ -108,18 +123,20 @@ int main(int argc, char** argv) {
                                         }
                                     }
                                     else{
-                                        printf("Write port without - or / \n");
+                                        printf("Specify port to listen on.\n");
                                     }
                                     break;
                                 }
                     case 'r':   {
                                     if(hasValue_1){
                                         // change nickname
-                                        strcpy(nick,argv[n+1]);
-                                        printf("Nick: %s \n", nick);
+                                        strcpy(local_nick,argv[n+1]);
+                                        printf("Nick: %s \n", local_nick);
+                                        return (EXIT_SUCCESS);
                                     }
                                     else{
                                         printf("Write nick without - or / \n");
+                                        return (EXIT_FAILURE);
                                     }
                                     break;
                                 }

@@ -6,6 +6,8 @@
  */
 
 #include "connection.h"
+#include "bnconvert.h"
+#include "crypto.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -54,26 +56,65 @@ void *listener(void * _port){
                     pthread_exit(NULL);
             }
 
-        int n;
-        char buffer[256];
-
+        int numBytes;
+        int size;
+        printf("Incoming chat connection.\n");
+       
+        //For Waiting on Data
         fd_set listener_set;
         FD_ZERO(&listener_set);
         FD_SET(newsockfd, &listener_set);
+        
+         //Send n
+        unsigned char * n_char=bn_to_char(local_rsa->n_bn);
+
+        uint32_t nsize=bn_get_size_bigendian(local_rsa->n_bn);
+        write(newsockfd,&nsize,4);
+        write(newsockfd,n_char,bn_get_size(local_rsa->n_bn));
+
+        //Send e
+        unsigned char * e_char=bn_to_char(local_rsa->e_bn);
+        uint32_t esize=bn_get_size_bigendian(local_rsa->e_bn);
+        write(newsockfd,&esize,4);
+        write(newsockfd,e_char,bn_get_size(local_rsa->e_bn));
+
+        // Read Nick
+        numBytes = read(newsockfd, &size, 4);
+        if(numBytes==0) {
+             perror("Couldn't read nick length.");
+             pthread_exit(NULL);
+        }
+        size=ntohl(size);
+        remote_nick=malloc(size);
+        bzero(remote_nick,size);
+        numBytes = read(newsockfd, remote_nick, size);
+        printf("Remote Nick is %s.\n",remote_nick);
+         fflush( stdout );
+         
         while (1) {
-           bzero(buffer, 256);
+           
            select(1+newsockfd,&listener_set,NULL,NULL,NULL);
-           n = read(newsockfd, buffer, 255);
-           if (n < 0)
+
+           numBytes = read(newsockfd, &size, 4);
+           size=ntohl(size);
+           if (numBytes < 0)
            {
                perror("ERROR reading from socket");
-           } else if(n==0) {
+               close(newsockfd);
+               pthread_exit(NULL);
+           } else if(numBytes==0) {
+               // Remote connection closed
                close(newsockfd);
                pthread_exit(NULL);
            } else {
-                printf(">>%s", buffer);
+               unsigned char * crypted=malloc(size);
+               bzero(crypted,size);
+               numBytes = read(newsockfd, crypted, size);
+               unsigned char * message;
+               decrypt(crypted,size,local_rsa,&message);
+               printf(">>%s", message);
            }
-
+           
             
               
         } 
@@ -86,7 +127,7 @@ void *connector(void * _target){
 
         struct sockaddr_in stSockAddr;
         int Res;
-        char buffer[82];
+        
         int ret;
 
 
@@ -112,16 +153,61 @@ void *connector(void * _target){
             } else if (0 == Res) {
                 perror("char string (second parameter does not contain valid ipaddress)");
                 close(SocketFD);
-                 pthread_exit(NULL);
+                pthread_exit(NULL);
             }
             
             ret=connect(SocketFD, (struct sockaddr *) & stSockAddr, sizeof (stSockAddr));
             if (ret == 0 ) {
                 printf("Connection successfully established.\n");
+                int size,numBytes;
+                remote_rsa=malloc(sizeof(struct RSA));
+                // Read n
+                numBytes = read(SocketFD, &size, 4);
+                if(numBytes==0) {
+                     perror("Couldn't read public key.");
+                     pthread_exit(NULL);
+                }
+                size=ntohl(size);
+                unsigned char * n_char=malloc(size);
+
+                bzero(n_char,size);
+
+                numBytes = read(SocketFD, n_char, size);
+
+                remote_rsa->n_bn=char_to_bn(n_char,size);
+
+
+                // Read e
+                numBytes = read(SocketFD, &size, 4);
+                if(numBytes==0) {
+                     perror("Couldn't read public key.");
+                     pthread_exit(NULL);
+                }
+                size=ntohl(size);
+                unsigned char * e_char=malloc(size);
+                //bzero(e_char,size);
+                numBytes = read(SocketFD, e_char, size);
+
+                remote_rsa->e_bn=char_to_bn(e_char,size);
+               
+                
+                //Send Nick
+                int nicklength=htonl((uint32_t)(strlen(local_nick)+1));
+                
+                write(SocketFD,&nicklength,sizeof(int));
+                
+                write(SocketFD,local_nick,strlen(local_nick)+1);
+                
                 while(1) {
-                    bzero(buffer, 82);
-                    fgets(buffer, 80, stdin);
-                    send(SocketFD, buffer, strlen(buffer),0);
+                    unsigned char *buffer=malloc(INPUT_LENGTH);
+                    bzero(buffer, INPUT_LENGTH);
+                    fgets((char *)buffer, INPUT_LENGTH, stdin);
+
+                    unsigned char * encrypted;
+                    int cryptedsize=encrypt(buffer,strlen((char *)buffer),remote_rsa,&encrypted);
+                    uint32_t msglength=htonl(cryptedsize);
+                    send(SocketFD,(char *)&msglength,4,0);
+                    send(SocketFD, (char *)encrypted, cryptedsize,0);
                 }
                 
             } else {

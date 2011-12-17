@@ -7,19 +7,21 @@
 
 #ifndef _CONNECTION_H
 #define	_CONNECTION_H
+#define INPUT_LENGTH 80
 
 struct host{
     char* ip;
     int port;
 };
 
-void Connection();
+struct RSA * remote_rsa;
+struct RSA * local_rsa;
+char * remote_nick;
+char * local_nick;
 
 void *listener(void * port);
 
 void *connector(void * target);
-
-void error(const char *msg);
 
 
 #endif	/* _CONNECTION_H */

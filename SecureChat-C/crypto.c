@@ -9,15 +9,15 @@
 #include <math.h>
 #include <string.h>
 
- unsigned char * decrypt(unsigned char *crypted,int msglength) {
+  int decrypt(unsigned char *crypted,int msglength,struct RSA * rsa,unsigned char ** message) {
    
     int i;
     
-    int blocksize=BN_num_bytes(n_bn);  //Get the length of n
+    int blocksize=BN_num_bytes(rsa->n_bn);  //Get the length of n
    
     int blockcount=ceil((double)msglength/(double)blocksize);
 
-    unsigned char * message=malloc(msglength);
+    *message=malloc(blockcount*blocksize);
 
     for(i=0;i<blockcount;i++) {
 
@@ -26,26 +26,26 @@
 
         memcpy(cryptedblock,crypted+i*blocksize,blocksize);
       
-        decryptBlock(cryptedblock,blocksize,decryptedBlock);
+        decryptBlock(cryptedblock,blocksize,decryptedBlock,rsa);
 
-        memcpy(message+i*blocksize,decryptedBlock,blocksize);
+        memcpy(*message+i*blocksize,decryptedBlock,blocksize);
 
         free(cryptedblock);
         free(decryptedBlock);
 
     }
-    return message; 
+    return blockcount*blocksize;
 
 }
 
- unsigned char * encrypt( unsigned char *message,int msglength) {
+  int encrypt(unsigned char *message,int msglength,struct RSA * rsa,unsigned char ** crypted) {
    
     int i;
    
-    int blocksize=BN_num_bytes(n_bn); //Get the length of n
+    int blocksize=BN_num_bytes(rsa->n_bn); //Get the length of n
    
     int blockcount=ceil((double)msglength/(double)blocksize);
-    unsigned char * crypted=malloc(msglength);
+    *crypted=malloc(blocksize*blockcount);
     
     for(i=0;i<blockcount;i++) {
 
@@ -60,19 +60,19 @@
 
         memcpy(block,message+i*blocksize,copySize);
        
-        encryptBlock(block,copySize,encryptedBlock);
+        encryptBlock(block,copySize,encryptedBlock,rsa);
         
-        memcpy(crypted+i*blocksize,encryptedBlock,blocksize);
+        memcpy(*crypted+i*blocksize,encryptedBlock,blocksize);
 
         free(encryptedBlock);
         free(block);
     }
-    return crypted; 
+    return blocksize*blockcount;
 
 }
 
 
-void decryptBlock( const unsigned char* crypted,int length, unsigned char * message)
+void decryptBlock( const unsigned char* crypted,int length, unsigned char * message,struct RSA * rsa)
 {
 
     BIGNUM * bn_crypted = BN_new();
@@ -82,7 +82,7 @@ void decryptBlock( const unsigned char* crypted,int length, unsigned char * mess
     BIGNUM *bn_decrypted = BN_new();
     BN_CTX *ctx = BN_CTX_new();
 
-    BN_mod_exp(bn_decrypted,bn_crypted,d_bn,n_bn,ctx);
+    BN_mod_exp(bn_decrypted,bn_crypted,rsa->d_bn,rsa->n_bn,ctx);
     
    
     BN_bn2bin(bn_decrypted,message);
@@ -92,9 +92,9 @@ void decryptBlock( const unsigned char* crypted,int length, unsigned char * mess
    
 
 }
-void encryptBlock( const unsigned char* message ,int length, unsigned char* crypted)
+void encryptBlock( const unsigned char* message ,int length, unsigned char* crypted,struct RSA * rsa)
 {
-    int n_size=BN_num_bytes(n_bn);
+    int n_size=BN_num_bytes(rsa->n_bn);
     int i;
     unsigned char * paddedmsg=malloc(n_size);
     memcpy(paddedmsg,message,length);
@@ -109,7 +109,7 @@ void encryptBlock( const unsigned char* message ,int length, unsigned char* cryp
     BIGNUM *bn_crypted = BN_new();
     BN_CTX *ctx = BN_CTX_new();
 
-    BN_mod_exp(bn_crypted,bn_message,e_bn,n_bn,ctx);
+    BN_mod_exp(bn_crypted,bn_message,rsa->e_bn,rsa->n_bn,ctx);
     
     BN_bn2bin(bn_crypted,crypted);
 
@@ -120,12 +120,13 @@ void encryptBlock( const unsigned char* message ,int length, unsigned char* cryp
 }
 
 
-void genKey()
+struct RSA * genKey()
 {
+    struct RSA * rsa=malloc(sizeof(struct RSA));
     //TODO: FIX KEYS
-    n_bn = BN_new();
-    e_bn = BN_new();
-    d_bn = BN_new();
+    rsa->n_bn = BN_new();
+    rsa->e_bn = BN_new();
+    rsa->d_bn = BN_new();
 
     BIGNUM * phi_bn = BN_new();
     BIGNUM * p_bn = BN_new();
@@ -139,10 +140,10 @@ void genKey()
 
     BN_dec2bn(&p_bn,p);
     BN_dec2bn(&q_bn,q);
-    BN_dec2bn(&d_bn,d);
+    BN_dec2bn(&rsa->d_bn,d);
 
     // calculate n
-    BN_mul(n_bn,p_bn,q_bn,ctx);
+    BN_mul(rsa->n_bn,p_bn,q_bn,ctx);
 
     //calculate phi
     BIGNUM *tmp1 = BN_new();
@@ -154,7 +155,7 @@ void genKey()
     BN_mul(phi_bn,tmp1,tmp2,ctx);
 
     // calculate e
-    BN_mod_inverse(e_bn,d_bn,phi_bn,ctx);  
+    BN_mod_inverse(rsa->e_bn,rsa->d_bn,phi_bn,ctx);
     
     //release things
     free(q);
@@ -167,7 +168,7 @@ void genKey()
     BN_free(phi_bn);
     BN_free(q_bn);
     BN_free(p_bn);
-
+    return rsa;
 }
 
  char * generatePrime(int numBit) {

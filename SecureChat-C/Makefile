@@ -26,7 +26,7 @@ CFLAGS = -Wall -g
 LIBS = -lssl -lsqlite3 -lpthread -lm
 
 # define the C source files
-SRCS = connection.c crypto.c main.c sqlite.c
+SRCS = connection.c crypto.c main.c sqlite.c bnconvert.c
 
 # define the C object files 
 #
