@@ -30,17 +30,7 @@ int main(int argc, char** argv) {
     }
     
     local_rsa=genKey();
-    
-    unsigned char * text=(unsigned char *)"Hallo2kljasldkjalskjdlkasjdlkasjdlkjasldkjalsdlaskjdlkajsdTEst";
-    unsigned char * crypted;
-    int cryptedsize=encrypt(text,strlen((char *)text),local_rsa,&crypted);
-    unsigned char * decrypted;
-    decrypt(crypted,cryptedsize,local_rsa,&decrypted);
-    char * result=(char *)decrypted;
-    printf("%s", result);
-    printf("\n");
-    
-    
+        
     // loop and return var definitions
     int ret,n;
     
