@@ -15,7 +15,12 @@
 #include "connection.h"
 #include "sqlite.h"
 void print_help() {
-     printf("help comming soon! \n");
+     printf("Use of the chat: \n");
+     printf("chat -h : prints this message. \n");
+     printf("chat -i <nick>: create and store RSA key pair for the nick\n");
+     printf("chat -c <host> <port>: open secure connection\n");
+     printf("chat -l <port>: listen to port\n");
+     printf("chat -r <nick>: change user\n");
 }
 
 
@@ -28,7 +33,7 @@ int main(int argc, char** argv) {
     // loop and return var definitions
     int ret,n;
 
-    if(argc==0) {
+    if(argc==1) {
         print_help();
     }
 

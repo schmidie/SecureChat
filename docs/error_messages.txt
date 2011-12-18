@@ -53,14 +53,3 @@ Error: Couldn't read public key.
 Error: Faild connecting. Trying again in 5 seconds.
 
 
-Database Error Messages:
-
-
-Can't open database: 
-
-SQL error: 
-
-DB error: 
-
-DB error: Prepared statement is empty
-
