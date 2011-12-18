@@ -20,7 +20,7 @@ int bn_get_size(BIGNUM *bignum) {
     return BN_num_bytes(bignum);
 }
 
-BIGNUM * char_to_bn(unsigned char * number,int size ) {
+BIGNUM * char_to_bn(const unsigned char * number,int size ) {
     BIGNUM * bn=BN_new();
     BN_bin2bn(number,size,bn);
     return bn;

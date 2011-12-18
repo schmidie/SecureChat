@@ -37,8 +37,7 @@ int main(int argc, char** argv) {
         return ret;
     }
 
-    set_data("testname",genKey());
-    get_data(&local_nick,&local_rsa);
+   
     // variables for thread-handling
     int listening,connecting;
     pthread_t p1, p2;
@@ -115,7 +114,8 @@ int main(int argc, char** argv) {
                     case 'l':   {
                                     if(hasValue_1){
                                         int  port =atoi(argv[n+1]);
-                                       
+                                        ret=get_data(&local_nick,&local_rsa);
+                                        
                                         if(ret) {
                                             printf("Generate keys before you connect to anyone.\n");
                                             return EXIT_FAILURE;

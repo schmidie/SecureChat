@@ -5,7 +5,7 @@
  * Created on 15. Dezember 2011, 13:54
  */
 #include "sqlite.h"
-
+#include "bnconvert.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sqlite3.h>
@@ -24,7 +24,7 @@ int init_sqlite() {
         sqlite3_close(db);
         return(EXIT_FAILURE);
     }
-    ret = sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS users (ID INTEGER PRIMARY KEY, name TEXT,rsa BLOB); ", NULL, 0, &errorMsg);
+    ret = sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS users (ID INTEGER PRIMARY KEY, name TEXT,n BLOB,d BLOB,e BLOB); ", NULL, 0, &errorMsg);
     if( ret!=SQLITE_OK ){
         fprintf(stderr, "SQL error: %s\n", errorMsg);
         sqlite3_free(errorMsg);
@@ -38,8 +38,12 @@ int get_data(char ** nickname,struct RSA ** rsa) {
 	char *sql = "SELECT * FROM users WHERE id = '1'";
 
         const unsigned char * nickname_const;
-        const void * rsa_const;
-	
+        const void * n_const;
+        const void * d_const;
+        const void * e_const;
+	BIGNUM * n;
+        BIGNUM * d;
+        BIGNUM * e;
 	sqlite3_prepare(db, sql, strlen(sql), &statement, NULL);
 
         int ret=1;
@@ -47,13 +51,27 @@ int get_data(char ** nickname,struct RSA ** rsa) {
 	{
             ret=0;
             nickname_const=sqlite3_column_text(statement, 1);
-            rsa_const=sqlite3_column_blob(statement, 2);
-             int nicklength=strlen((char*)nickname_const);
-            *nickname=malloc(nicklength+1);
-            bzero(*nickname,nicklength+1);
+            n_const=sqlite3_column_blob(statement, 2);
+            d_const=sqlite3_column_blob(statement, 3);
+            e_const=sqlite3_column_blob(statement, 4);
+             int nicklength=sqlite3_column_bytes(statement,1);
+             int nlength=sqlite3_column_bytes(statement,2);
+             int dlength=sqlite3_column_bytes(statement,3);
+             int elength=sqlite3_column_bytes(statement,4);
+            *nickname=malloc(nicklength);
+            bzero(*nickname,nicklength);
             *rsa=malloc(sizeof(struct RSA));
+            bzero(*rsa,nlength);
+            bzero(*rsa,dlength);
+            bzero(*rsa,elength);
+            
+            n=char_to_bn(n_const,nlength);
+            e=char_to_bn(e_const,elength);
+            d=char_to_bn(d_const,dlength);
             memcpy(*nickname,nickname_const,nicklength);
-            memcpy(*rsa,rsa_const,sizeof(struct RSA));
+            (*rsa)->n_bn=n;
+            (*rsa)->d_bn=d;
+            (*rsa)->e_bn=e;
             
 	}
        
@@ -63,7 +81,7 @@ int get_data(char ** nickname,struct RSA ** rsa) {
 }
 
 int set_data(char * nickname,struct RSA * rsa) {
-  const char   *sql = "INSERT OR REPLACE INTO users(ID, name,rsa) VALUES('1',?,?)";
+  const char   *sql = "INSERT OR REPLACE INTO users(ID, name,n,d,e) VALUES('1',?,?,?,?)";
   sqlite3_stmt *statement;
   
 
@@ -76,8 +94,10 @@ int set_data(char * nickname,struct RSA * rsa) {
 
   if(statement)
   {
-      sqlite3_bind_text(statement, 1, nickname,strlen(nickname), SQLITE_STATIC);
-      sqlite3_bind_blob(statement, 2, rsa, sizeof(struct RSA), SQLITE_STATIC);
+      sqlite3_bind_text(statement, 1, nickname,strlen(nickname)+1, SQLITE_STATIC);
+      sqlite3_bind_blob(statement, 2, bn_to_char(rsa->n_bn), bn_get_size(rsa->n_bn), SQLITE_STATIC);
+      sqlite3_bind_blob(statement, 3, bn_to_char(rsa->d_bn), bn_get_size(rsa->d_bn), SQLITE_STATIC);
+      sqlite3_bind_blob(statement, 4, bn_to_char(rsa->e_bn), bn_get_size(rsa->e_bn), SQLITE_STATIC);
       sqlite3_step(statement);
       sqlite3_finalize(statement);
       sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);

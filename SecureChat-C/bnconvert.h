@@ -15,7 +15,7 @@
 unsigned char * bn_to_char(BIGNUM * bignum);
 uint32_t bn_get_size_bigendian(BIGNUM * bignum);
 int bn_get_size(BIGNUM *bignum);
-BIGNUM * char_to_bn(unsigned char * number,int size );
-
+BIGNUM * char_to_bn(const unsigned char * number,int size );
+ 
 #endif	/* _CONVERT_H */
 
