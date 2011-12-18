@@ -1,0 +1,28 @@
+
+
+In diesem Dokument wird das Format des Datenaustausches erläutert.
+
+
+Im Folgenden werden die Begriffe Listener und Connector verwende. Dabei wartet der Listener auf eine Verbindung (chat -l <port>) und Connector baut eine Verbindung auf (chat -c <host> <port>).
+
+Nach einem erfolgreichen Verbindungsaufbau des Connectors, kommunizieren Connector und Listener ueber folgendes Protokoll:
+
+
+(Alle Laenge Felder sind 4 byte Lang.)
+
+Uebertragung des oeffentlichen Schluessels:
+
+Listener	-------- Laenge von N ---------->	Connector
+Listener	--------------- N -------------->	Connector
+Listener	-------- Laenge von E ---------->	Connector
+Listener	--------------- E -------------->	Connector
+
+Uebertragen des Nicks:
+
+Connector	-------- Laenge von Nick ------->	Listener
+Connector	--------------- Nick ----------->	Listener
+
+Uebertragen der verschluesselten Daten:
+
+Connector	-------- Laenge der Daten ------>	Listener
+Connector	--------------- Daten ---------->	Listener
