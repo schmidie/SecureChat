@@ -41,7 +41,9 @@ int main(int argc, char** argv) {
     if(ret) {
         return ret;
     }
-
+    
+    // Try reading a key from the db
+    int has_keys=get_data(&local_nick,&local_rsa);
    
     // variables for thread-handling
     int listening,connecting;
@@ -92,10 +94,8 @@ int main(int argc, char** argv) {
                                     if(hasValue_1 && hasValue_2){
 
                                         // Todo get the nick from db
-                                        
-                                        ret=get_data(&local_nick,&local_rsa);
-                                        
-                                        if(ret) {
+                                     
+                                        if(has_keys) {
                                             printf("Generate keys before you connect to anyone.\n");
                                             return EXIT_FAILURE;
                                         }
@@ -119,12 +119,12 @@ int main(int argc, char** argv) {
                     case 'l':   {
                                     if(hasValue_1){
                                         int  port =atoi(argv[n+1]);
-                                        ret=get_data(&local_nick,&local_rsa);
                                         
-                                        if(ret) {
+                                        if(has_keys) {
                                             printf("Generate keys before you connect to anyone.\n");
                                             return EXIT_FAILURE;
                                         }
+                                      
                                         
                                         //listen for connections
                                         printf("Listening on port: %d\n",port);

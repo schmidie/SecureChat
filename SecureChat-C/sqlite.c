@@ -126,7 +126,7 @@ int set_nick(char * nickname) {
 
   if(statement)
   {
-      sqlite3_bind_text(statement, 1, nickname,strlen(nickname), SQLITE_STATIC);
+      sqlite3_bind_text(statement, 1, nickname,strlen(nickname)+1, SQLITE_STATIC);
       sqlite3_step(statement);
       sqlite3_finalize(statement);
       sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);

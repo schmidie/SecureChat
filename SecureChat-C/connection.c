@@ -211,7 +211,7 @@ void *connector(void * _target){
                 }
                 
             } else {
-                printf("Faild connecting. Trying again in 5 seconds.\n");
+                printf("Failed connecting. Trying again in 5 seconds.\n");
                 fflush( stdout );
                 sleep(5);
             }
