@@ -1,0 +1,66 @@
+
+
+In diesem Dokument werden die Fehlermeldungen naeher erlaeutert.
+
+
+General Error Messages:
+
+
+Error: Write nick without - or / 
+--> Der Nick darf kein - oder / Zeichen am Anfang haben und muss mindestens ein Zeichen lang sein
+
+
+Error: Generate keys before you connect to anyone.
+--> Es muss zuerst mit "chat -i <nick>" ein Schluesselpaar generiert werden bevor eine Verbindung aufgebaut werden kann
+
+
+Error: Specify ip and port of destination host.
+--> Beim Verbindunsaufbau (chat -c <host> <port>) muss ein korrekter Host und Port angegeben werden
+
+
+Error: Specify port to listen on.
+--> Es muss ein Port fuer den Listener angegeben werden
+
+
+Error: Illegal argument.
+--> Es gibt nur folgende Argumente -h -i -c -l -r
+
+
+
+Connection Error Messages:
+
+
+Error: ERROR opening socket
+
+Error: ERROR on binding
+
+Error: ERROR on accept
+
+Error: Couldn't read nick length.
+
+Error: ERROR reading from socket
+
+Error: Cannot create socket
+
+Error: error: first parameter is not a valid address family
+
+Error: char string (second parameter does not contain valid ipaddress)
+
+Error: Connection successfully established.
+
+Error: Couldn't read public key.
+
+Error: Faild connecting. Trying again in 5 seconds.
+
+
+Database Error Messages:
+
+
+Can't open database: 
+
+SQL error: 
+
+DB error: 
+
+DB error: Prepared statement is empty
+
